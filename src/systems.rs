@@ -1,5 +1,3 @@
-use std::time::Instant;
-
 use winit::event::*;
 use rand::Rng;
 
@@ -14,7 +12,7 @@ pub struct GameState {
     apple_pos: [usize; 2],
     tail: Vec<[usize; 2]>,
     dir: [i8; 2],
-    previous_time: Instant,
+    previous_time: instant::Instant,
     tick: f32,
     paused: bool,
 }
@@ -39,7 +37,7 @@ impl GameState {
         GameState {
             board,
             dir: [0,0],
-            previous_time: Instant::now(),
+            previous_time: instant::Instant::now(),
             snake_pos,
             paused: false,
             tail: vec![],
@@ -50,11 +48,11 @@ impl GameState {
 
     pub fn update(&mut self) {
         if self.paused {
-            self.previous_time = Instant::now();
+            self.previous_time = instant::Instant::now();
             return
         }
 
-        let current_time = Instant::now();
+        let current_time = instant::Instant::now();
         let elapsed_time = current_time.duration_since(self.previous_time).as_secs_f32();
         self.previous_time = current_time;
 
@@ -75,7 +73,14 @@ impl GameState {
             for tail in self.tail.iter() {
                 self.board[tail[0]][tail[1]] = None;
             }
-            self.tail = self.tail.iter().zip(self.tail.iter().skip(1)).map(|(&a, _)| a).collect::<Vec<_>>();
+            
+            self.tail = {
+                self.tail.iter()
+                .zip(self.tail.iter().skip(1))
+                .map(|(&a, _)| a)
+                .collect::<Vec<_>>()
+            };
+
             self.tail.insert(0, self.snake_pos);
             for tail in self.tail.iter() {
                 self.board[tail[0]][tail[1]] = Some(Cell::Tail);
