@@ -16,7 +16,6 @@ pub struct State {
     window: Window,
     render_pipeline: wgpu::RenderPipeline,
     diffuse_bind_group: wgpu::BindGroup,
-    diffuse_texture: texture::Texture,
     vertex_buffer: Option<wgpu::Buffer>,
     index_buffer: Option<wgpu::Buffer>,
     index_count: usize
@@ -180,7 +179,6 @@ impl State {
             size,
             render_pipeline,
             diffuse_bind_group,
-            diffuse_texture,
             vertex_buffer: None,
             index_buffer: None,
             index_count: 0
