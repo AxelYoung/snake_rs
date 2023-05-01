@@ -2,7 +2,7 @@ use winit::event::*;
 use rand::Rng;
 
 pub const GRID_SIZE: [i32;2] = [20, 20];
-const FRAME_TIME: f32 = 0.01;
+const FRAME_TIME: f32 = 0.005;
 const MOVE_TIME: f32 = 1.0;
 
 pub struct GameState {
