@@ -1,9 +1,12 @@
+use std::time::Instant;
+
 use winit::event::*;
 use rand::Rng;
 
 pub const GRID_SIZE: [i32;2] = [20, 20];
-const FRAME_TIME: f32 = 0.005;
-const MOVE_TIME: f32 = 1.0;
+
+const TICKS_PER_SECOND: f32 = 15.0;
+const TICK_TIME: f32 = 1.0 / TICKS_PER_SECOND;
 
 pub struct GameState {
     pub board: [[Option<Cell>; GRID_SIZE[1] as usize]; GRID_SIZE[0] as usize],
@@ -11,7 +14,8 @@ pub struct GameState {
     apple_pos: [usize; 2],
     tail: Vec<[usize; 2]>,
     dir: [i8; 2],
-    time: f32,
+    previous_time: Instant,
+    tick: f32,
     paused: bool,
 }
 
@@ -35,22 +39,30 @@ impl GameState {
         GameState {
             board,
             dir: [0,0],
-            time: 0.0,
+            previous_time: Instant::now(),
             snake_pos,
             paused: false,
             tail: vec![],
+            tick: 0.0,
             apple_pos
         }
     }
 
     pub fn update(&mut self) {
-        if self.paused {return}
+        if self.paused {
+            self.previous_time = Instant::now();
+            return
+        }
 
-        self.time += FRAME_TIME;
+        let current_time = Instant::now();
+        let elapsed_time = current_time.duration_since(self.previous_time).as_secs_f32();
+        self.previous_time = current_time;
 
-        if self.time > MOVE_TIME {
+        self.tick += elapsed_time;
+
+        if self.tick > TICK_TIME {
             self.move_snake();
-            self.time = 0.0;
+            self.tick -= TICK_TIME;
         }
     }
 
