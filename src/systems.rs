@@ -12,9 +12,9 @@ pub struct GameState {
     apple_pos: [usize; 2],
     tail: Vec<[usize; 2]>,
     dir: [i8; 2],
+    input_dir: [i8; 2],
     previous_time: instant::Instant,
     tick: f32,
-    paused: bool,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -37,9 +37,9 @@ impl GameState {
         GameState {
             board,
             dir: [0,0],
+            input_dir: [0,0],
             previous_time: instant::Instant::now(),
             snake_pos,
-            paused: false,
             tail: vec![],
             tick: 0.0,
             apple_pos
@@ -47,10 +47,6 @@ impl GameState {
     }
 
     pub fn update(&mut self) {
-        if self.paused {
-            self.previous_time = instant::Instant::now();
-            return
-        }
 
         let current_time = instant::Instant::now();
         let elapsed_time = current_time.duration_since(self.previous_time).as_secs_f32();
@@ -65,7 +61,7 @@ impl GameState {
     }
 
     fn move_snake(&mut self) {
-        if self.dir == [0, 0] { return }
+        if self.input_dir == [0, 0] { return }
 
         self.board[self.snake_pos[0]][self.snake_pos[1]] = None;
 
@@ -87,7 +83,7 @@ impl GameState {
             }
         }
 
-        let new_pos = [(self.snake_pos[0] as i8 + self.dir[0]), (self.snake_pos[1] as i8 + self.dir[1])];
+        let new_pos = [(self.snake_pos[0] as i8 + self.input_dir[0]), (self.snake_pos[1] as i8 + self.input_dir[1])];
         
         if new_pos[0] < 0 || new_pos[0] >= GRID_SIZE[0] as i8 || new_pos[1] < 0 || new_pos[1] >= GRID_SIZE[1] as i8 {
             self.reset_game();
@@ -107,11 +103,15 @@ impl GameState {
         }
         self.snake_pos = new_pos;
         self.board[self.snake_pos[0]][self.snake_pos[1]] = Some(Cell::Head);
+        self.dir = self.input_dir;
     }
 
     fn random_apple(&mut self) {
         self.board[self.apple_pos[0]][self.apple_pos[1]] = None;
         self.apple_pos = GameState::random_position();
+        while self.board[self.apple_pos[0]][self.apple_pos[1]] != None {
+            self.apple_pos = GameState::random_position();
+        }
         self.board[self.apple_pos[0]][self.apple_pos[1]] = Some(Cell::Apple);
     }
 
@@ -143,24 +143,12 @@ impl GameState {
                 input:
                     KeyboardInput {
                         state: ElementState::Pressed,
-                        virtual_keycode: Some(VirtualKeyCode::Space),
-                        ..
-                    },
-                ..
-            } => {
-                self.paused = !self.paused;
-                return true;
-            }
-            WindowEvent::KeyboardInput {
-                input:
-                    KeyboardInput {
-                        state: ElementState::Pressed,
                         virtual_keycode: Some(VirtualKeyCode::Down),
                         ..
                     },
                 ..
             } => {
-                if self.dir != [0, 1] { self.dir = [0, -1]; }
+                if self.dir != [0, 1] { self.input_dir = [0, -1]; }
                 return true;
             }
             WindowEvent::KeyboardInput {
@@ -172,7 +160,7 @@ impl GameState {
                     },
                 ..
             } => {
-                if self.dir != [0, -1] { self.dir = [0, 1]; }
+                if self.dir != [0, -1] { self.input_dir = [0, 1]; }
                 return true;
             }
             WindowEvent::KeyboardInput {
@@ -184,7 +172,7 @@ impl GameState {
                     },
                 ..
             } => {
-                if self.dir != [1, 0] { self.dir = [-1, 0]; }
+                if self.dir != [1, 0] { self.input_dir = [-1, 0]; }
                 return true;
             }
             WindowEvent::KeyboardInput {
@@ -196,7 +184,7 @@ impl GameState {
                     },
                 ..
             } => {
-                if self.dir != [-1, 0] { self.dir = [1, 0]; }
+                if self.dir != [-1, 0] { self.input_dir = [1, 0]; }
                 return true;
             }
             _ => { }
